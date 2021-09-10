@@ -7,9 +7,11 @@ products:
   - azure-redis-cache
 description: "This sample creates a multi-container application in an Azure Kubernetes Service (AKS) cluster."
 ---
-## GitHub Demo Day
+# GitHub Demo Day
 
 This demo is part of the GitHub Demo Day sessions hosted weekly! 
+- [Demo Days - From A(KS) to Z, automate your workflows with GitHub!](https://www.linkedin.com/events/demodays-keepcalmanddevopson6838532958866022401/)
+- Friday - Sep 10, 2021
 
 We will use this repo to see how GitHub can simplify security, automation, container management, K8s deployments and more!
 
@@ -71,3 +73,17 @@ Currently the `manifests/deployment.yml` file needs to have the `azure-vote-fron
 
 ## Available resources for multiple namespaces
 For demo purposes, the manifest files only ask for 1 replica for the services. Multiple replicas or namespaces (5+) may hit resource limitations for your AKS cluster.
+
+# References
+
+## Microsoft Teams
+GitHub is the world's leading software development platform. Microsoft Teams is one of the most popular communication platforms where modern development teams come together to build world-class products and services. With two of your most important workspaces connected, you'll stay updated on what's happening on GitHub without leaving Microsoft Teams.
+- https://github.com/integrations/microsoft-teams
+
+## GitHub Actions
+Environments - You can configure environments with protection rules and secrets. When a workflow job references an environment, the job won't start until all of the environment's protection rules pass.
+- https://docs.github.com/en/actions/reference/environments
+
+## GitHub Container Registry
+You can store and manage Docker and OCI images in the Container registry, which uses the package namespace https://ghcr.io.
+- https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
