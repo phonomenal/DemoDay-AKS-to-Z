@@ -19,9 +19,10 @@ We will use this repo to see how GitHub can simplify security, automation, conta
 
 | Secret Name | Value Required |
 |-------------      |--------------- |
-|AKS_CLUSTER_NAME             | AKS Cluster name |
-|AKS_CLUSTER_RESOURCE_GROUP   | Resource Group that contains the AKS Cluster  |
+|AKS_CLUSTER_NAME                     | AKS Cluster name |
+|AKS_CLUSTER_RESOURCE_GROUP           | Resource Group that contains the AKS Cluster  |
 |AZURE_SERVICE_PROVIDER_CREDENTIALS   | SP with permission to access the Azure Resource Group |
+|GH_ENV_PAT                           | PAT with repo admin access | 
 
 ### Generate Azure Service Principal
 To deploy to Azure you will need to create a service principal. You can do that with the following command:
