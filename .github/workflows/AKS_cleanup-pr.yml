@@ -1,0 +1,114 @@
+name: Cleanup PR
+on:
+  workflow_dispatch:
+    
+  pull_request:
+    types: [closed]
+    branches: main
+env:
+  CLUSTER_NAME: ${{secrets.AKS_CLUSTER_NAME}}
+  CLUSTER_RESOURCE_GROUP: ${{secrets.AKS_CLUSTER_RESOURCE_GROUP}}
+
+jobs:
+  delete-pr-namespaces:
+    runs-on: ubuntu-latest
+    outputs:
+      deploymentEnvironments: ${{steps.environment_list.outputs.environmentNameList}}
+      matrix-combinations: ${{ steps.setup-matrix.outputs.matrix-combinations }}
+    steps:
+    - name: Get and Delete Deployment Environments from PR
+      id: environment_list
+      uses: James-LeHa/Deployment-Environment-Cleanup@1.6
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ github.repository }}
+        delete_environments: true
+        token: ${{secrets.OCTODEMO_OCTODEMOBOT_TOKEN}}
+
+    - name: Check Deployments Found
+      if: ${{steps.environment_list.outputs.deploymentsFound == 'true'}}
+      run: echo 'Deployments found value:' ${{steps.environment_list.outputs.deploymentsFound}}
+
+    - name: Check Deployments Found
+      if: ${{steps.environment_list.outputs.deploymentsFound != 'true'}}
+      run: |
+        echo 'Deployments found value: false'
+        exit 1
+
+    # Set the target Azure Kubernetes Service (AKS) cluster. 
+    - uses: azure/aks-set-context@v1
+      with:
+        creds: '${{ secrets.OCTODEMO_GITHUB_AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+    
+    - run: echo ${{steps.environment_list.outputs.environmentNameList}}
+    - name: kubectl delete pr environment namespace(s)
+      run: |
+        value=${{steps.environment_list.outputs.environmentNameList}}
+        valueFormatted=${value//,/ }
+        arrayDeployments=( $valueFormatted )
+          for i in "${arrayDeployments[@]}"
+          do
+            namespaceStatus=$(kubectl get namespace $i \
+                -o jsonpath="{.status.phase}") || true
+            echo $i status: $namespaceStatus
+            if [ $namespaceStatus = "Active" ]; then
+              kubectl delete namespaces $i
+            else
+              echo "Namespace status not 'Active'"
+            fi
+          done
+
+    - name: Comment Cleanup Success 
+      uses: actions/github-script@v3.0.0
+      if: success()
+      with:
+        result-encoding: string
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### AKS - PR Cleanup 🗑️\`Success\`
+
+          #### AKS Deployment Summary
+
+          * __Azure Resource Group__: ${{ env.CLUSTER_RESOURCE_GROUP }}
+          * __AKS Cluster Name__: ${{ env.CLUSTER_NAME }}
+          * __AKS Namespace__: ${{ env.NAMESPACE }}
+          * __ref__: ${{ github.event.pull_request.head.ref }}
+          * __Actions Run:__ https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`,  Workflow: \`${{ github.workflow }}\`*`;
+            
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Comment Cleanup Failure
+      uses: actions/github-script@v3.0.0
+      if: failure()
+      with:
+        result-encoding: string
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `#### AKS - PR Cleanup ❌\`Failed\`
+
+          #### AKS Attempted Deployment Summary
+
+          * __Azure Resource Group__: ${{ env.CLUSTER_RESOURCE_GROUP }}
+          * __AKS Cluster Name__: ${{ env.CLUSTER_NAME }}
+          * __AKS Namespace(s)__: ${{steps.environment_list.outputs.environmentNameList}}
+          * __ref__: ${{ github.event.pull_request.head.ref }}
+          * __Actions Run:__ https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`,  Workflow: \`${{ github.workflow }}\`*`;
+            
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })

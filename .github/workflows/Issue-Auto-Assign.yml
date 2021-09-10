@@ -1,0 +1,20 @@
+name: Auto Assign Feature Enhancement to Project
+
+on:
+  issues:
+    types: [opened]
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  assign_one_project:
+    runs-on: ubuntu-latest
+    name: Assign to One Project
+    steps:
+    - name: Assign issues and pull requests with `enhancement` label to project 1
+      uses: srggrs/assign-one-project-github-action@1.2.1
+      if: |
+        contains(github.event.issue.labels.*.name, 'enhancement')
+      with:
+        project: 'https://github.com/${{github.repository}}/projects/1'
+        column_name: 'Backlog'

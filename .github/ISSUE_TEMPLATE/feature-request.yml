@@ -1,0 +1,39 @@
+---
+name: Feature Request
+title: "Feature Request"
+description: Create a Demo repository and associated cloud resources
+labels:
+  - enhancement
+assignees:
+  - james-leha
+
+body:
+  - type: dropdown
+    attributes:
+      label: 'Priority'
+      description: Priority level of this feature request.
+      options:
+        - high
+        - medium
+        - low
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: 'Category'
+      description: The type of requested update/change/modification.
+      options:
+        - UI 
+        - UX
+        - Data
+        - Logic
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: 'Description'
+      description: Describe the requested feature and/or enhancement
+    validations:
+      required: true

@@ -1,0 +1,218 @@
+name: AKS Staging & Production - Deploy
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/**"
+  workflow_dispatch:
+
+concurrency: 
+  group: main
+  cancel-in-progress: true
+
+env:
+  CLUSTER_RESOURCE_GROUP: ${{secrets.AKS_CLUSTER_RESOURCE_GROUP}}
+
+  PROD_CLUSTER_NAME: ${{secrets.AKS_CLUSTER_NAME}}
+  PROD_NAMESPACE: production
+  PROD_SECRET: avf-secret
+
+  STAGING_CLUSTER_NAME: ${{secrets.AKS_CLUSTER_NAME}}
+  STAGING_NAMESPACE: staging
+  STAGING_SECRET: avf-secret
+  
+jobs:
+
+  build-image-ghcr:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@main
+
+      # Get lowercase repo name
+      - name: downcase REPO
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
+      # Connect to GitHub Container Registry (ghcr)
+      - name: Login to GitHub Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push to GHCR
+        uses: docker/build-push-action@v2
+        with:
+          context: ./azure-vote
+          file: ./azure-vote/Dockerfile
+          push: true
+          tags: ghcr.io/${{env.REPO}}:${{ github.sha }}
+
+  deploy-staging:
+      runs-on: ubuntu-latest
+      needs: [build-image-ghcr]
+      environment: 
+        name: Staging
+        url: http://${{steps.load_balancer_IP.outputs.external_ip}}
+      outputs:
+        aks_external_ip: ${{ env.aks_external_ip }}
+      steps:
+      - uses: actions/checkout@main
+
+      - name: downcase REPO
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
+      # Set the target Azure Kubernetes Service (AKS) cluster. 
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.OCTODEMO_GITHUB_AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
+          cluster-name: ${{ env.STAGING_CLUSTER_NAME }}
+          resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+      
+      # Create namespace if doesn't exist
+      - run: |
+          kubectl create namespace ${{ env.STAGING_NAMESPACE }} --dry-run=client -o json | kubectl apply -f -
+      
+      # Create image pull secret for GHCR
+      - uses: azure/k8s-create-secret@v1
+        with:
+          container-registry-url: ghcr.io/${{env.REPO}}
+          container-registry-username: ${{ github.actor }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          secret-name: ${{ env.STAGING_SECRET }}
+          namespace: ${{ env.STAGING_NAMESPACE }}
+      
+      # Deploy app to AKS
+      - uses: azure/k8s-deploy@v1
+        with:
+
+          manifests: |
+            manifests/deployment.yml
+            manifests/service.yml
+          images: |
+            ghcr.io/${{env.REPO}}:${{ github.sha }}
+          imagepullsecrets: |
+            ${{ env.STAGING_SECRET }}
+          namespace: ${{ env.STAGING_NAMESPACE }}   
+
+      # Use kubectl to get load balancer external IP
+      - name: Get and Set Load Balancer Public IP
+        id: load_balancer_IP
+        run: |
+          IPAddress=$(kubectl get svc azure-vote-front  -n ${{env.STAGING_NAMESPACE}} \
+              -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
+          echo $IPAddress
+          echo '::set-output name=external_ip::'"$IPAddress"''
+          echo "aks_external_ip=$IPAddress" >> $GITHUB_ENV
+      
+      - run: echo ${{steps.load_balancer_IP.outputs.external_ip}}
+
+
+  validate-staging:
+    name: ✔️ Validate Staging
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, build-image-ghcr]
+    steps:
+    - name: Check the deployed service URL
+      uses: jtalk/url-health-check-action@v1.2
+      with:
+        # Check the following URLs one by one sequentially
+        url: ${{ needs.deploy-staging.outputs.aks_external_ip }}
+        follow-redirect: no # Optional, defaults to "no"
+        # Fail this action after this many failed attempts
+        max-attempts: 10 # Optional, defaults to 1
+        # Delay between retries
+        retry-delay: 6s # Optional, only applicable to max-attempts > 1
+
+  pre-release:
+    name: "Create Pre Release"
+    runs-on: "ubuntu-latest"
+    needs: [deploy-staging, validate-staging]
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "AKS Cluster Build"
+
+  deploy-prod:
+      runs-on: ubuntu-latest
+      needs: [deploy-staging, validate-staging]
+      environment: 
+        name: Production
+        url: http://${{steps.load_balancer_IP.outputs.external_ip}}
+      outputs:
+        aks_external_ip: ${{ env.aks_external_ip }}   
+      steps:
+      - uses: actions/checkout@main
+
+      - name: downcase REPO
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+                    
+      # Set the target Azure Kubernetes Service (AKS) cluster. 
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.OCTODEMO_GITHUB_AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
+          cluster-name: ${{ env.PROD_CLUSTER_NAME }}
+          resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+      
+      # Create namespace if doesn't exist
+      - run: |
+          kubectl create namespace ${{ env.PROD_NAMESPACE }} --dry-run=client -o json | kubectl apply -f -
+      
+      # Create image pull secret for GHCR
+      - uses: azure/k8s-create-secret@v1
+        with:
+          container-registry-url: ghcr.io/${{env.REPO}}
+          container-registry-username: ${{ github.actor }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          secret-name: ${{ env.PROD_SECRET }}
+          namespace: ${{ env.PROD_NAMESPACE }}
+      
+      # Deploy app to AKS
+      - uses: azure/k8s-deploy@v1
+        with:
+
+          manifests: |
+            manifests/deployment.yml
+            manifests/service.yml
+          images: |
+            ghcr.io/${{env.REPO}}:${{ github.sha }}
+          imagepullsecrets: |
+            ${{ env.PROD_SECRET }}
+          namespace: ${{ env.PROD_NAMESPACE }}   
+
+      # Use kubectl to get load balancer external IP
+      - name: Get and Set Load Balancer Public IP
+        id: load_balancer_IP
+        run: |
+          IPAddress=$(kubectl get svc azure-vote-front  -n ${{env.PROD_NAMESPACE}} \
+              -o jsonpath="{.status.loadBalancer.ingress[*].ip}")
+          echo $IPAddress
+          echo "aks_external_ip=$IPAddress" >> $GITHUB_ENV
+          echo '::set-output name=external_ip::'"$IPAddress"''
+          echo '::set-output name=external_ip::'"$IPAddress"''
+
+  validate-prod:
+    name: ✔️ Validate Production
+    runs-on: ubuntu-latest
+    needs: deploy-prod
+    steps:
+    - name: Check the deployed service URL
+      uses: jtalk/url-health-check-action@v1.2
+      with:
+        # Check the following URLs one by one sequentially
+        url: ${{ needs.deploy-prod.outputs.aks_external_ip }}
+        follow-redirect: no # Optional, defaults to "no"
+        # Fail this action after this many failed attempts
+        max-attempts: 10 # Optional, defaults to 1
+        # Delay between retries
+        retry-delay: 6s # Optional, only applicable to max-attempts > 1
