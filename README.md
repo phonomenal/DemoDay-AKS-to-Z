@@ -18,12 +18,13 @@ Leveraged tutorials/content from Microsoft Docs:
 
 ## Prerequisites
 
-1. You should have 2 secrets generated for this repo:
+1. This demo requires 3 secrets to be generated:
 
 | Secret Name | Value Required |
 |-------------      |--------------- |
 |AKS_CLUSTER_NAME             | AKS Cluster name |
 |AKS_CLUSTER_RESOURCE_GROUP   | Resource Group that contains the AKS Cluster  |
+|AZURE_SERVICE_PROVIDER_CREDENTIALS   | SP with permission to access the Azure Resource Group |
 
 
 ## How to Demo
@@ -36,36 +37,6 @@ Leveraged tutorials/content from Microsoft Docs:
 1. Merge PR, observe that **Cleanup PR** and **AKS Staging & Production - Deploy** workflows kick off
 1. View Staging and Production environment deployments
 
-# Additional Features/Scenarios
-
-## Environments
-
-## ACR
-The Azure Container Registry be added as part of the deployment process to showcase a multi-registry approach.
-
-Create an Azure container registry and generate a username and password as seen in the following [guide](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-github-action).
-  - Set the corresponding output as repo secret: `REGISTRY_USERNAME`
-  - Set the corresponding output as repo secret: `REGISTRY_PASSWORD`
-
-See `.github/example-workflows/` for an example. 
-
-## AKS Staging and Production DNS URLs
-AKS namespaces generated will produce an external IP Address, if you would like to use a prettier url for persistent namespaces such as 'staging' and 'production'.
-
-Utilize the 'Public IP Address' resource configurations for adding an **Alias record set**:
-- https://docs.microsoft.com/en-us/azure/dns/dns-alias
-
-See `.github/example-workflows/` for an example. 
-
-## Microsoft Teams Integration
-The GitHub and Microsoft Teams integration can be used to show case chatops functionality.
-
-In a Microsoft Teams channel, setup a connector for 'Incoming Webhook' and copy the generated 'webhook url'.
-- https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/connectors-using#setting-up-a-custom-incoming-webhook
-
-See `.github/example-workflows/` for an example. 
-
-## Advanced Security - Code Scanning
 
 # Azure Voting App
 
