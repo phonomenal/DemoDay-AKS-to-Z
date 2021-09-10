@@ -71,7 +71,7 @@ jobs:
       # Set the target Azure Kubernetes Service (AKS) cluster. 
       - uses: azure/aks-set-context@v1
         with:
-          creds: '${{ secrets.OCTODEMO_GITHUB_AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
+          creds: '${{ secrets.AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
           cluster-name: ${{ env.STAGING_CLUSTER_NAME }}
           resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
       
@@ -160,7 +160,7 @@ jobs:
       # Set the target Azure Kubernetes Service (AKS) cluster. 
       - uses: azure/aks-set-context@v1
         with:
-          creds: '${{ secrets.OCTODEMO_GITHUB_AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
+          creds: '${{ secrets.AZURE_SERVICE_PROVIDER_CREDENTIALS }}'
           cluster-name: ${{ env.PROD_CLUSTER_NAME }}
           resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
       
