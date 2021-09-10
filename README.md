@@ -7,14 +7,6 @@ products:
   - azure-redis-cache
 description: "This sample creates a multi-container application in an Azure Kubernetes Service (AKS) cluster."
 ---
-# Demo Prep / Setup
-**This repo was created from the [demo-bootstrap](https://github.com/octodemo/demo-bootstrap) orchestrator.*
-
-This repo will demonstrate using AKS, GitHub Codespaces, Actions, Environments, and GitHub Container Registry.
-
-Leveraged tutorials/content from Microsoft Docs:
-- [Tutorial: Prepare an application for Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/tutorial-kubernetes-prepare-app)
-- [GitHub Actions for deploying to Kubernetes service](https://docs.microsoft.com/en-us/azure/aks/kubernetes-action)
 
 ## Prerequisites
 
@@ -26,6 +18,26 @@ Leveraged tutorials/content from Microsoft Docs:
 |AKS_CLUSTER_RESOURCE_GROUP   | Resource Group that contains the AKS Cluster  |
 |AZURE_SERVICE_PROVIDER_CREDENTIALS   | SP with permission to access the Azure Resource Group |
 
+### Generate Azure Service Principal
+To deploy to Azure you will need to create a service principal. You can do that with the following command:
+
+```sh
+az ad sp create-for-rbac --name {yourServicePrincipalName} --role contributor \
+                            --scopes /subscriptions/{subscription-id} \
+                            --sdk-auth
+
+  # Replace {yourServicePrincipalName}, {subscription-id} with the a service principal name and subscription id.
+
+  # The command should output a JSON object similar to the example below
+
+  {
+    "clientId": "<GUID>",
+    "clientSecret": "<GUID>",
+    "subscriptionId": "<GUID>",
+    "tenantId": "<GUID>",
+    (...)
+  }
+```
 
 ## How to Demo
 1. Open project in Codespaces or VS Code
