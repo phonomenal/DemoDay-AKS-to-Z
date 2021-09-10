@@ -48,7 +48,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: azure-vote-front
-        image: ghcr.io/octodemo/test-asurion-demo:v1
+        image: ghcr.io/James-LeHa/DemoDay-AKS-to-Z:v1
         ports:
         - containerPort: 80
         resources:
