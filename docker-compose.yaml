@@ -11,7 +11,7 @@ services:
   azure-vote-front:
     build: ./azure-vote
     # image: fabrikam.azurecr.io/azure-vote-front:v1
-    image: ghcr.io/James-LeHa/DemoDay-AKS-to-Z/azure-vote-front:v1
+    image: ghcr.io/james-leha/demoday-aks-to-z/azure-vote-front:v1
     container_name: azure-vote-front
     environment:
       REDIS: azure-vote-back

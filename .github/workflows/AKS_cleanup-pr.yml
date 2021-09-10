@@ -23,7 +23,7 @@ jobs:
         ref: ${{ github.event.pull_request.head.ref }}
         repository: ${{ github.repository }}
         delete_environments: true
-        token: ${{secrets.Delete_Environment_PAT}}
+        token: ${{secrets.GH_ENV_PAT}}
 
     - name: Check Deployments Found
       if: ${{steps.environment_list.outputs.deploymentsFound == 'true'}}
