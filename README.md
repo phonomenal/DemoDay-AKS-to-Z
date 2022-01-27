@@ -1,4 +1,6 @@
 ---
+
+[![Git](https://app.soluble.cloud/api/v1/public/badges/087697b0-8c42-456f-b038-b00a4cb7c626.svg?orgId=650162616495)](https://app.soluble.cloud/repos/details/github.com/james-leha/demoday-aks-to-z?orgId=650162616495)  
 page_type: sample
 languages:
   - python
