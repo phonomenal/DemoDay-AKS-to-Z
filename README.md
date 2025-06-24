@@ -49,7 +49,8 @@ az ad sp create-for-rbac --name {yourServicePrincipalName} --role contributor \
 
 ## How to Demo
 1. Open project in Codespaces or VS Code
-2. Use `docker-compose build` and `docker-compose up` commands to show off the application
+2. Use `docker-compose build` and `docker-compose up` commands to show off the application locally
+  - Navgate to http://localhost:8080
 3. Create a new branch, 
     - modify `azure-vote/azure-vote/config_file.cfg` to update homepage values
 1. Create a PR, utilize review-lab keyword comment - if desired.

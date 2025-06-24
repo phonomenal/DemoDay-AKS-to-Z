@@ -1,29 +1,73 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='default.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <title>{{title}}</title>
-
-    <script language="JavaScript">
-        function send(form){
-        }
-    </script>
-
 </head>
 <body>
-    <div id="container">
-        <form id="form" name="form" action="/"" method="post"><center>
-        <div id="logo">{{title}}</div>
-        <div id="space"></div>
-        <div id="form">
-        <button name="vote" value="{{button1}}" onclick="send()" class="button button1">{{button1}}</button>
-        <button name="vote" value="{{button2}}" onclick="send()" class="button button2">{{button2}}</button>
-        <button name="vote" value="reset" onclick="send()" class="button button3">Reset</button>
-        <div id="space"></div>
-        <div id="space"></div>
-        <div id="results"> {{button1}} - {{ value1 }} | {{button2}} - {{ value2 }} </div> 
-        </form>        
-        </div>
-    </div>     
+    <div class="background-pattern"></div>
+    <div class="container">
+        <header class="header">
+            <div class="header-icon">
+                <i class="fas fa-vote-yea"></i>
+            </div>
+            <h1 class="title">{{title}}</h1>
+            <p class="subtitle">Make your choice and see the results in real-time</p>
+        </header>
+
+        <main class="main-content">
+            <form class="voting-form" action="/" method="post">
+                <div class="voting-section">
+                    <h2 class="section-title">Cast Your Vote</h2>
+                    <div class="button-container">
+                        <button name="vote" value="{{button1}}" class="vote-button vote-button-1" type="submit">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span>{{button1}}</span>
+                        </button>
+                        <button name="vote" value="{{button2}}" class="vote-button vote-button-2" type="submit">
+                            <i class="fas fa-heart"></i>
+                            <span>{{button2}}</span>
+                        </button>
+                    </div>
+                    <button name="vote" value="reset" class="reset-button" type="submit">
+                        <i class="fas fa-redo"></i>
+                        <span>Reset Votes</span>
+                    </button>
+                </div>
+
+                <div class="results-section">
+                    <h2 class="section-title">Live Results</h2>
+                    <div class="results-container">
+                        <div class="result-item">
+                            <div class="result-label">{{button1}}</div>
+                            <div class="result-value">{{ value1 }}</div>
+                            <div class="result-bar">
+                                <div class="result-fill result-fill-1" style="width: {% if value1 + value2 > 0 %}{{ (value1 / (value1 + value2) * 100) | round(1) }}%{% else %}0%{% endif %}"></div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">{{button2}}</div>
+                            <div class="result-value">{{ value2 }}</div>
+                            <div class="result-bar">
+                                <div class="result-fill result-fill-2" style="width: {% if value1 + value2 > 0 %}{{ (value2 / (value1 + value2) * 100) | round(1) }}%{% else %}0%{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="total-votes">
+                        <i class="fas fa-users"></i>
+                        Total Votes: <strong>{{ value1 + value2 }}</strong>
+                    </div>
+                </div>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>Powered by Azure Kubernetes Service</p>
+        </footer>
+    </div>
 </body>
 </html>
