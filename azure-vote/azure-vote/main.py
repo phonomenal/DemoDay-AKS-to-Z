@@ -51,6 +51,13 @@ if not r.get(button1):
 if not r.get(button2):
     r.set(button2, 0)
 
+def votingMessage(vote1, vote2):
+    ## get the absolute value between the two params
+    diff = abs(int(vote1) - int(vote2))
+    if diff > 10:
+        return "The gap is widening!!"
+    else:
+        return "Anyone's race!"
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -60,11 +67,14 @@ def index():
         # Get current values
         vote1 = r.get(button1).decode('utf-8')
         vote2 = r.get(button2).decode('utf-8')
+
+        votingSentimentMessage = votingMessage(vote1, vote2) 
+
         # Return index with values
         return render_template(
             "index.html", value1=int(vote1),
             value2=int(vote2), button1=button1,
-            button2=button2, title=title)
+            button2=button2, title=title, votingSentimentMessage=votingSentimentMessage)
 
     elif request.method == 'POST':
 
@@ -74,9 +84,22 @@ def index():
             r.set(button2, 0)
             vote1 = r.get(button1).decode('utf-8')
             vote2 = r.get(button2).decode('utf-8')
+            votingSentimentMessage = votingMessage(vote1, vote2) 
+
             return render_template(
                 "index.html", value1=int(vote1), value2=int(vote2),
-                button1=button1, button2=button2, title=title)
+                button1=button1, button2=button2, title=title, votingSentimentMessage=votingSentimentMessage)
+        
+        elif request.form['vote'] == 'remove':
+            # remove 1 vote value from button2
+            r.decr(button2, 1)
+            vote1 = r.get(button1).decode('utf-8')
+            vote2 = r.get(button2).decode('utf-8')
+            votingSentimentMessage = votingMessage(vote1, vote2) 
+
+            return render_template(
+                "index.html", value1=int(vote1), value2=int(vote2),
+                button1=button1, button2=button2, title=title, votingSentimentMessage=votingSentimentMessage)
         else:
 
             # Insert vote result into DB
@@ -85,10 +108,11 @@ def index():
             # Get current values
             vote1 = r.get(button1).decode('utf-8')
             vote2 = r.get(button2).decode('utf-8')
-            # Return results
+            votingSentimentMessage = votingMessage(vote1, vote2) 
+
             return render_template(
                 "index.html", value1=int(vote1), value2=int(vote2),
-                button1=button1, button2=button2, title=title)
+                button1=button1, button2=button2, title=title, votingSentimentMessage=votingSentimentMessage)
 
 
 if __name__ == "__main__":
